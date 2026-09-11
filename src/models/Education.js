@@ -1,39 +1,46 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const EducationSchema = new mongoose.Schema({
+const Education = sequelize.define('Education', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   title: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   category: {
-    type: String,
-    enum: ['malnutrisi', 'gizi-dasar', 'berdasarkan-usia', 'pencegahan', 'tips-sehat'],
-    required: true,
+    type: DataTypes.ENUM('malnutrisi', 'gizi-dasar', 'berdasarkan-usia', 'pencegahan', 'tips-sehat'),
+    allowNull: false,
   },
-  subCategory: String,
   content: {
-    type: String,
-    required: true,
+    type: DataTypes.TEXT,
+    allowNull: false,
   },
-  summary: String,
-  ageRange: {
-    min: Number,
-    max: Number,
+  summary: {
+    type: DataTypes.TEXT,
   },
-  tags: [String],
-  imageUrl: String,
-  author: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+  ageMin: {
+    type: DataTypes.FLOAT,
+  },
+  ageMax: {
+    type: DataTypes.FLOAT,
+  },
+  tags: {
+    type: DataTypes.JSON,
+  },
+  imageUrl: {
+    type: DataTypes.STRING,
   },
   views: {
-    type: Number,
-    default: 0,
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+}, {
+  tableName: 'educations',
+  timestamps: true,
 });
 
-module.exports = mongoose.model('Education', EducationSchema);
+module.exports = Education;

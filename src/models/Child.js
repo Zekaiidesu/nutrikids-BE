@@ -1,56 +1,38 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const ChildSchema = new mongoose.Schema({
+const Child = sequelize.define('Child', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'users',
+      key: 'id',
+    },
   },
   name: {
-    type: String,
-    required: [true, 'Nama anak wajib diisi'],
-    trim: true,
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   nickname: {
-    type: String,
-    trim: true,
+    type: DataTypes.STRING,
   },
   gender: {
-    type: String,
-    enum: ['Laki-laki', 'Perempuan'],
-    required: true,
+    type: DataTypes.ENUM('Laki-laki', 'Perempuan'),
+    allowNull: false,
   },
   birthDate: {
-    type: Date,
-    required: true,
+    type: DataTypes.DATEONLY,
+    allowNull: false,
   },
-  // Data pertumbuhan
-  growthHistory: [
-    {
-      date: {
-        type: Date,
-        default: Date.now,
-      },
-      weight: {
-        type: Number,
-        required: true,
-      },
-      height: {
-        type: Number,
-        required: true,
-      },
-      bmi: Number,
-      status: {
-        type: String,
-        enum: ['Normal', 'Kekurangan Gizi', 'Gizi Kurang', 'Gizi Baik', 'Risiko Obesitas'],
-      },
-      notes: String,
-    }
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+}, {
+  tableName: 'children',
+  timestamps: true,
 });
 
-module.exports = mongoose.model('Child', ChildSchema);
+module.exports = Child;

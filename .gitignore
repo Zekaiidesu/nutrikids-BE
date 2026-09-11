@@ -25,3 +25,12 @@ build/
 
 # Testing
 coverage/
+
+# Python (ML Service)
+ml-service/venv/
+ml-service/__pycache__/
+ml-service/*.pyc
+ml-service/*.pkl
+
+# Backup
+src-mongodb-backup/

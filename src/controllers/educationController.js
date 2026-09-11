@@ -1,96 +1,105 @@
 const Education = require('../models/Education');
+const { Op } = require('sequelize');
 
-// Get all education articles
+// ==================== GET ALL ARTICLES ====================
 exports.getAllArticles = async (req, res) => {
   try {
     const { category, age } = req.query;
-    let query = {};
+    const whereClause = {};
 
-    if (category) query.category = category;
+    if (category) whereClause.category = category;
+
     if (age) {
-      query['ageRange.min'] = { $lte: parseInt(age) };
-      query['ageRange.max'] = { $gte: parseInt(age) };
+      whereClause.ageMin = { [Op.lte]: parseInt(age) };
+      whereClause.ageMax = { [Op.gte]: parseInt(age) };
     }
 
-    const articles = await Education.find(query).sort({ createdAt: -1 });
+    const articles = await Education.findAll({
+      where: whereClause,
+      order: [['createdAt', 'DESC']],
+    });
+
     res.json({ success: true, count: articles.length, articles });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get single article
+// ==================== GET SINGLE ARTICLE ====================
 exports.getArticle = async (req, res) => {
   try {
-    const article = await Education.findById(req.params.id);
+    const article = await Education.findByPk(req.params.id);
     if (!article) {
       return res.status(404).json({ message: 'Artikel tidak ditemukan' });
     }
+
+    // Increment views
     article.views += 1;
     await article.save();
+
     res.json({ success: true, article });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Create article (admin)
-exports.createArticle = async (req, res) => {
-  try {
-    const article = await Education.create({
-      ...req.body,
-      author: req.user.id,
-    });
-    res.status(201).json({ success: true, article });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get articles by category
+// ==================== GET BY CATEGORY ====================
 exports.getByCategory = async (req, res) => {
   try {
-    const articles = await Education.find({ category: req.params.category });
+    const articles = await Education.findAll({
+      where: { category: req.params.category },
+    });
     res.json({ success: true, count: articles.length, articles });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get prevention timeline
+// ==================== CREATE ARTICLE ====================
+exports.createArticle = async (req, res) => {
+  try {
+    const article = await Education.create(req.body);
+    res.status(201).json({ success: true, article });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ==================== PREVENTION TIMELINE ====================
 exports.getPreventionTimeline = async (req, res) => {
   try {
-    const timeline = {
-      bayi: {
-        title: 'Tahap 1 - Bayi',
-        tips: [
-          'ASI sesuai rekomendasi',
-          'Pemantauan pertumbuhan',
-          'Imunisasi',
-          'Pemberian MPASI sesuai usia',
-        ],
+    res.json({
+      success: true,
+      timeline: {
+        bayi: {
+          title: 'Tahap 1 - Bayi',
+          tips: [
+            'ASI sesuai rekomendasi',
+            'Pemantauan pertumbuhan',
+            'Imunisasi',
+            'Pemberian MPASI sesuai usia',
+          ],
+        },
+        balita: {
+          title: 'Tahap 2 - Balita',
+          tips: [
+            'Makanan beragam',
+            'Protein cukup',
+            'Sayur dan buah',
+            'Pemantauan berat dan tinggi badan',
+          ],
+        },
+        anak: {
+          title: 'Tahap 3 - Anak',
+          tips: [
+            'Pola makan seimbang',
+            'Aktivitas fisik',
+            'Tidur cukup',
+            'Edukasi mengenai makanan sehat',
+          ],
+        },
       },
-      balita: {
-        title: 'Tahap 2 - Balita',
-        tips: [
-          'Makanan beragam',
-          'Protein cukup',
-          'Sayur dan buah',
-          'Pemantauan berat dan tinggi badan',
-        ],
-      },
-      anak: {
-        title: 'Tahap 3 - Anak',
-        tips: [
-          'Pola makan seimbang',
-          'Aktivitas fisik',
-          'Tidur cukup',
-          'Edukasi mengenai makanan sehat',
-        ],
-      },
-    };
-
-    res.json({ success: true, timeline });
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

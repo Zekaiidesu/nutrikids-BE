@@ -1,9 +1,10 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./src/config/swagger');
+const { connectDB, sequelize } = require('./src/config/database');
+require('./src/models/index');
 
 dotenv.config();
 
@@ -24,22 +25,31 @@ const childRoutes = require('./src/routes/childRoutes');
 const nutritionRoutes = require('./src/routes/nutritionRoutes');
 const donationRoutes = require('./src/routes/donationRoutes');
 const educationRoutes = require('./src/routes/educationRoutes');
+const mlRoutes = require('./src/routes/mlRoutes');
 
 app.use('/api/users', userRoutes);
 app.use('/api/children', childRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/education', educationRoutes);
+app.use('/api/ml', mlRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'NutriKids API is running' });
 });
 
-const connectDB = require('./src/config/database');
-connectDB();
-
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📚 Swagger Documentation: http://localhost:${PORT}/api/docs`);
-});
+
+const startServer = async () => {
+  await connectDB();
+  await sequelize.sync({ alter: false });
+  console.log('✅ Database synced');
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📚 Swagger: http://localhost:${PORT}/api/docs`);
+    console.log(`🤖 ML Service: ${process.env.ML_API_URL}`);
+  });
+};
+
+startServer();

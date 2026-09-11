@@ -1,37 +1,57 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const NutritionSchema = new mongoose.Schema({
+const Nutrition = sequelize.define('Nutrition', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   name: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   category: {
-    type: String,
-    enum: ['protein', 'carbohydrate', 'fat', 'vitamin', 'mineral'],
-    required: true,
+    type: DataTypes.ENUM('protein', 'carbohydrate', 'fat', 'vitamin', 'mineral'),
+    allowNull: false,
   },
-  description: String,
-  calories: Number,
-  protein: Number,
-  carbohydrate: Number,
-  fat: Number,
-  vitamins: [String],
-  minerals: [String],
-  imageUrl: String,
-  // Untuk rekomendasi berdasarkan usia
-  recommendedAge: {
-    min: Number,
-    max: Number,
+  description: {
+    type: DataTypes.TEXT,
+  },
+  calories: {
+    type: DataTypes.FLOAT,
+  },
+  protein: {
+    type: DataTypes.FLOAT,
+  },
+  carbohydrate: {
+    type: DataTypes.FLOAT,
+  },
+  fat: {
+    type: DataTypes.FLOAT,
+  },
+  vitamins: {
+    type: DataTypes.JSON,
+  },
+  minerals: {
+    type: DataTypes.JSON,
+  },
+  imageUrl: {
+    type: DataTypes.STRING,
+  },
+  ageMin: {
+    type: DataTypes.FLOAT,
+  },
+  ageMax: {
+    type: DataTypes.FLOAT,
   },
   priceCategory: {
-    type: String,
-    enum: ['hemat', 'sedang', 'lengkap'],
-    default: 'sedang',
+    type: DataTypes.ENUM('hemat', 'sedang', 'lengkap'),
+    defaultValue: 'sedang',
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+}, {
+  tableName: 'nutritions',
+  timestamps: true,
 });
 
-module.exports = mongoose.model('Nutrition', NutritionSchema);
+module.exports = Nutrition;
