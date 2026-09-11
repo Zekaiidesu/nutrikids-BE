@@ -48,7 +48,7 @@ const startServer = async () => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📚 Swagger: http://localhost:${PORT}/api/docs`);
-    console.log(`🤖 ML Service: ${process.env.ML_API_URL}`);
+    console.log(`🤖 ML Service: ${process.env.ML_API_URL || 'http://localhost:5002'}`);
   });
 };
 

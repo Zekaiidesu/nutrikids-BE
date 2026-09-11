@@ -9,16 +9,10 @@ const options = {
       description: 'API untuk platform NutriKids - Solusi Cegah Stunting & Malnutrisi pada Anak',
       contact: { name: 'Tim NutriKids - OR 15 UKM Neo Telemetri' },
     },
-    servers: [
-      { url: 'http://localhost:5001', description: 'Development Server' },
-    ],
+    servers: [{ url: 'http://localhost:5001', description: 'Development Server' }],
     components: {
       securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
+        bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       },
     },
     tags: [

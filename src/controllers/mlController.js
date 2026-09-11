@@ -1,8 +1,5 @@
 const { predictNutrition, checkMLHealth } = require('../services/mlService');
 
-/**
- * POST /api/ml/predict
- */
 exports.predictStatusGizi = async (req, res) => {
   try {
     const { gender, age, weight, height } = req.body;
@@ -25,16 +22,10 @@ exports.predictStatusGizi = async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-/**
- * GET /api/ml/health
- */
 exports.mlHealth = async (req, res) => {
   const status = await checkMLHealth();
   res.json(status);
