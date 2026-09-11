@@ -179,3 +179,42 @@ exports.getGrowthChart = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// ==================== DELETE CHILD ====================
+exports.deleteChild = async (req, res) => {
+  try {
+    const child = await Child.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.id,
+    });
+
+    if (!child) {
+      return res.status(404).json({ 
+        message: 'Data anak tidak ditemukan atau bukan milik Anda' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Data anak berhasil dihapus',
+      deletedId: req.params.id,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ==================== DELETE ALL CHILDREN (Milik Sendiri) ====================
+exports.deleteAllChildren = async (req, res) => {
+  try {
+    const result = await Child.deleteMany({ userId: req.user.id });
+
+    res.json({ 
+      success: true, 
+      message: `${result.deletedCount} data anak berhasil dihapus`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

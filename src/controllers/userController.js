@@ -2,31 +2,59 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Register user
+// ==================== REGISTER ====================
+// Bisa pakai email + phone
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, address } = req.body;
+    const { name, email, phone, password, address } = req.body;
 
-    // Check if user exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
+    // Validasi
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ 
+        message: 'Nama, email, nomor HP, dan password wajib diisi' 
+      });
+    }
+
+    // Validasi format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Format email tidak valid' });
+    }
+
+    // Validasi format nomor HP (Indonesia)
+    const phoneRegex = /^(\+62|62|0)8[1-9][0-9]{6,10}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ 
+        message: 'Format nomor HP tidak valid. Contoh: 081234567890' 
+      });
+    }
+
+    // Cek email sudah terdaftar
+    const emailExists = await User.findOne({ email });
+    if (emailExists) {
       return res.status(400).json({ message: 'Email sudah terdaftar' });
+    }
+
+    // Cek nomor HP sudah terdaftar
+    const phoneExists = await User.findOne({ phone });
+    if (phoneExists) {
+      return res.status(400).json({ message: 'Nomor HP sudah terdaftar' });
     }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
+    // Buat user
     const user = await User.create({
       name,
       email,
-      password: hashedPassword,
       phone,
+      password: hashedPassword,
       address,
     });
 
-    // Generate token
+    // Generate JWT
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -40,8 +68,8 @@ exports.register = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
         phone: user.phone,
+        role: user.role,
         address: user.address,
       },
     });
@@ -50,24 +78,41 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login user
+// ==================== LOGIN (Email atau HP) ====================
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, phone, password } = req.body;
 
-    // Check if user exists
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(401).json({ message: 'Email atau password salah' });
+    // Validasi: harus isi salah satu (email atau phone)
+    if ((!email && !phone) || !password) {
+      return res.status(400).json({ 
+        message: 'Email/Nomor HP dan password wajib diisi' 
+      });
     }
 
-    // Check password
+    // Cari user berdasarkan email atau phone
+    let user;
+    if (email) {
+      user = await User.findOne({ email });
+    } else if (phone) {
+      user = await User.findOne({ phone });
+    }
+
+    if (!user) {
+      return res.status(401).json({ 
+        message: 'Email/Nomor HP atau password salah' 
+      });
+    }
+
+    // Cek password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Email atau password salah' });
+      return res.status(401).json({ 
+        message: 'Email/Nomor HP atau password salah' 
+      });
     }
 
-    // Generate token
+    // Generate JWT
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -81,8 +126,8 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
         phone: user.phone,
+        role: user.role,
         address: user.address,
       },
     });
@@ -91,7 +136,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// Get current user
+// ==================== GET PROFILE ====================
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
@@ -101,14 +146,24 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// Update user
+// ==================== UPDATE PROFILE ====================
 exports.updateUser = async (req, res) => {
   try {
+    // Jangan izinkan ganti email/phone sembarangan (untuk keamanan)
+    const allowedUpdates = ['name', 'address'];
+    const updates = {};
+    allowedUpdates.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      req.body,
+      updates,
       { new: true, runValidators: true }
     ).select('-password');
+
     res.json({ success: true, user });
   } catch (error) {
     res.status(500).json({ message: error.message });
